@@ -7,7 +7,7 @@ import { routes } from './app.routes';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    // withComponentInputBinding: the ?user= query parameter becomes the page's `user` input.
+    // withComponentInputBinding: the :clientId route parameter becomes the page's `clientId` input.
     provideRouter(routes, withComponentInputBinding()),
     provideHttpClient(withFetch()),
   ]

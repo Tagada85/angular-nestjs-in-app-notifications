@@ -1,11 +1,11 @@
 import { Module, ValidationPipe } from '@nestjs/common';
 import { APP_PIPE } from '@nestjs/core';
-import { KudosModule } from './kudos/kudos.module.js';
+import { ClientsModule } from './clients/clients.module.js';
+import { InvoicesModule } from './invoices/invoices.module.js';
 import { SessionModule } from './session/session.module.js';
-import { UsersModule } from './users/users.module.js';
 
 @Module({
-  imports: [UsersModule, SessionModule, KudosModule],
+  imports: [ClientsModule, SessionModule, InvoicesModule],
   providers: [
     {
       // Every request body is checked against its DTO; unknown fields are refused.

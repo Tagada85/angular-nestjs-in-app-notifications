@@ -1,16 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import type { User } from '../users/user.js';
-import { UsersService } from '../users/users.service.js';
+import type { Client } from '../clients/client.js';
+import { ClientsService } from '../clients/clients.service.js';
 
 @Injectable()
 export class SessionService {
-  constructor(private readonly users: UsersService) {}
+  constructor(private readonly clients: ClientsService) {}
 
-  // Demo only: anyone can open a session as any user by sending their id.
-  // A real app takes the user from its own authentication, never from the request.
-  open(userId: string): User {
-    const user = this.users.findById(userId);
-    if (!user) throw new NotFoundException('Unknown user');
-    return user;
+  // Demo only: anyone can open a client's space by sending their id.
+  // A real app takes the client from its own authentication, never from the request.
+  open(clientId: string): Client {
+    const client = this.clients.findById(clientId);
+    if (!client) throw new NotFoundException('Unknown client');
+    return client;
   }
 }

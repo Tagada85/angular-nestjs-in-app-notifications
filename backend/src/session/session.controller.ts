@@ -1,5 +1,5 @@
 import { Body, Controller, HttpCode, Post } from '@nestjs/common';
-import type { User } from '../users/user.js';
+import type { Client } from '../clients/client.js';
 import { CreateSessionDto } from './create-session.dto.js';
 import { SessionService } from './session.service.js';
 
@@ -9,7 +9,7 @@ export class SessionController {
 
   @Post()
   @HttpCode(200)
-  open(@Body() { userId }: CreateSessionDto): User {
-    return this.session.open(userId);
+  open(@Body() { clientId }: CreateSessionDto): Client {
+    return this.session.open(clientId);
   }
 }

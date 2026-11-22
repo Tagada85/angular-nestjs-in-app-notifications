@@ -1,6 +1,181 @@
 body {
   margin: 0;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 15px;
   color: #18181b;
   background: #fafafa;
+}
+
+a {
+  color: inherit;
+}
+
+h1 {
+  margin: 0 0 16px;
+  font-size: 24px;
+}
+
+h2 {
+  margin: 0 0 12px;
+  font-size: 16px;
+}
+
+.muted {
+  color: #71717a;
+}
+
+/* Layout */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 24px;
+  background: #fff;
+  border-bottom: 1px solid #e4e4e7;
+}
+
+.brand {
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.account {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 16px;
+}
+
+.page.narrow {
+  max-width: 560px;
+}
+
+.card {
+  margin-bottom: 24px;
+  padding: 24px;
+  background: #fff;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  /* A wide table scrolls inside its card instead of widening the page. */
+  overflow-x: auto;
+}
+
+.card p {
+  margin: 0 0 16px;
+}
+
+/* Forms */
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.field.wide {
+  grid-column: 1 / -1;
+}
+
+input,
+select {
+  padding: 8px 10px;
+  font: inherit;
+  font-weight: 400;
+  border: 1px solid #d4d4d8;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+button,
+.button {
+  display: inline-block;
+  padding: 10px 16px;
+  font: inherit;
+  font-weight: 500;
+  color: #fff;
+  background: #18181b;
+  border: none;
+  border-radius: 6px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.feedback {
+  margin: 0;
+  font-size: 14px;
+  color: #15803d;
+}
+
+.feedback.error {
+  color: #b91c1c;
+}
+
+/* Lists and tables */
+
+.links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.links a {
+  display: block;
+  padding: 10px 12px;
+  border: 1px solid #e4e4e7;
+  border-radius: 6px;
+  text-decoration: none;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+th,
+td {
+  padding: 10px 8px;
+  text-align: left;
+  border-bottom: 1px solid #f4f4f5;
+}
+
+th {
+  font-weight: 500;
+  color: #71717a;
+}
+
+.amount {
+  text-align: right;
+  white-space: nowrap;
 }

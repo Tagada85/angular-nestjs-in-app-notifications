@@ -18,57 +18,104 @@ describe('API (e2e)', () => {
     await app.close();
   });
 
-  const sendKudos = (body: object) => request(app.getHttpServer()).post('/api/kudos').send(body);
+  const api = () => request(app.getHttpServer());
+  const validInvoice = {
+    clientId: 'alice',
+    description: 'Website redesign, phase 1',
+    amountInCents: 125000,
+    dueDate: '2026-12-31',
+  };
+  const createInvoice = (overrides: object = {}) => api().post('/api/invoices').send({ ...validInvoice, ...overrides });
 
-  it('lists the users without their emails', () => {
-    return request(app.getHttpServer())
-      .get('/api/users')
+  it('lists the clients without their emails', () => {
+    return api()
+      .get('/api/clients')
       .expect(200)
       .expect([
-        { id: 'alice', name: 'Alice' },
-        { id: 'bob', name: 'Bob' },
+        { id: 'alice', name: 'Alice Martin', company: 'Globex' },
+        { id: 'bob', name: 'Bob Durand', company: 'Initech' },
       ]);
   });
 
-  it('opens a session for a known user', () => {
-    return request(app.getHttpServer())
+  it("opens a known client's session", () => {
+    return api()
       .post('/api/session')
-      .send({ userId: 'bob' })
+      .send({ clientId: 'bob' })
       .expect(200)
-      .expect({ id: 'bob', name: 'Bob', email: 'bob@example.com' });
+      .expect({ id: 'bob', name: 'Bob Durand', company: 'Initech', email: 'bob@example.com' });
   });
 
-  it('refuses a session for an unknown user', () => {
-    return request(app.getHttpServer()).post('/api/session').send({ userId: 'mallory' }).expect(404);
+  it('refuses a session for an unknown client', () => {
+    return api().post('/api/session').send({ clientId: 'mallory' }).expect(404);
   });
 
-  it('sends kudos with the names from the server list', async () => {
-    const response = await sendKudos({ fromUserId: 'alice', toUserId: 'bob', message: '  Great demo!  ' }).expect(201);
+  it('creates an invoice with a number and the client from the server list', async () => {
+    const response = await createInvoice({ description: '  Website redesign, phase 1  ' }).expect(201);
 
     expect(response.body).toMatchObject({
-      from: { id: 'alice', name: 'Alice' },
-      to: { id: 'bob', name: 'Bob' },
-      message: 'Great demo!',
+      number: `INV-${new Date().getUTCFullYear()}-0001`,
+      client: { id: 'alice', name: 'Alice Martin', company: 'Globex' },
+      description: 'Website redesign, phase 1',
+      amountInCents: 125000,
+      currency: 'EUR',
+      dueDate: '2026-12-31',
     });
   });
 
-  it('refuses kudos to yourself', () => {
-    return sendKudos({ fromUserId: 'alice', toUserId: 'alice', message: 'Me again' }).expect(400);
+  it('numbers invoices in sequence', async () => {
+    await createInvoice().expect(201);
+    const second = await createInvoice({ clientId: 'bob' }).expect(201);
+
+    expect(second.body.number).toBe(`INV-${new Date().getUTCFullYear()}-0002`);
   });
 
-  it('refuses kudos to an unknown user', () => {
-    return sendKudos({ fromUserId: 'alice', toUserId: 'mallory', message: 'Hi' }).expect(400);
+  it("shows a client only their own invoices", async () => {
+    await createInvoice({ clientId: 'alice', description: 'For Alice' }).expect(201);
+    await createInvoice({ clientId: 'bob', description: 'For Bob' }).expect(201);
+
+    const response = await api().get('/api/invoices').query({ clientId: 'bob' }).expect(200);
+
+    expect(response.body.map((invoice: { description: string }) => invoice.description)).toEqual(['For Bob']);
   });
 
-  it('refuses a blank message', () => {
-    return sendKudos({ fromUserId: 'alice', toUserId: 'bob', message: '   ' }).expect(400);
+  it('lists all invoices, newest first, for the billing team', async () => {
+    await createInvoice({ description: 'First' }).expect(201);
+    await createInvoice({ description: 'Second' }).expect(201);
+
+    const response = await api().get('/api/invoices').expect(200);
+
+    expect(response.body.map((invoice: { description: string }) => invoice.description)).toEqual(['Second', 'First']);
   });
 
-  it('refuses a message longer than 280 characters', () => {
-    return sendKudos({ fromUserId: 'alice', toUserId: 'bob', message: 'a'.repeat(281) }).expect(400);
+  it("refuses to list an unknown client's invoices", () => {
+    return api().get('/api/invoices').query({ clientId: 'mallory' }).expect(404);
+  });
+
+  it('refuses an invoice for an unknown client', () => {
+    return createInvoice({ clientId: 'mallory' }).expect(400);
+  });
+
+  it('refuses a blank description', () => {
+    return createInvoice({ description: '   ' }).expect(400);
+  });
+
+  it('refuses an amount that is not a whole number of cents', () => {
+    return createInvoice({ amountInCents: 1250.5 }).expect(400);
+  });
+
+  it('refuses a zero amount', () => {
+    return createInvoice({ amountInCents: 0 }).expect(400);
+  });
+
+  it('refuses a due date that does not exist', () => {
+    return createInvoice({ dueDate: '2026-02-30' }).expect(400);
+  });
+
+  it('refuses a due date with a time', () => {
+    return createInvoice({ dueDate: '2026-12-31T10:00:00Z' }).expect(400);
   });
 
   it('refuses fields the API does not know', () => {
-    return sendKudos({ fromUserId: 'alice', toUserId: 'bob', message: 'Hi', fromName: 'Admin' }).expect(400);
+    return createInvoice({ number: 'INV-1999-9999' }).expect(400);
   });
 });

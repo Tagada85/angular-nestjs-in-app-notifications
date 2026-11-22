@@ -1,6 +1,6 @@
-# Kudos: an Angular + NestJS demo app
+# Acme Invoicing: an Angular + NestJS demo app
 
-Two users, Alice and Bob. One sends kudos to the other.
+A billing team creates invoices for its clients. Each client has their own space with their invoices.
 
 ## Run it
 
@@ -25,21 +25,27 @@ The app runs on http://localhost:4200. The Angular dev server forwards `/api` to
 
 ## Try it
 
-Open http://localhost:4200/?user=alice and http://localhost:4200/?user=bob in two tabs, then send kudos from one
-to the other.
+1. Open http://localhost:4200/billing in one tab and http://localhost:4200/clients/alice in another.
+2. In the billing tab, create an invoice for Alice Martin.
+3. Reload Alice's tab: the invoice is there. Bob's space (http://localhost:4200/clients/bob) stays empty.
 
 ## API
 
-| Method | Path           | Body                                  | Returns                                   |
-|--------|----------------|---------------------------------------|-------------------------------------------|
-| GET    | `/api/users`   |                                       | The users, without their emails           |
-| POST   | `/api/session` | `{ userId }`                          | The current user, 404 if unknown          |
-| POST   | `/api/kudos`   | `{ fromUserId, toUserId, message }`   | The kudos, 400 if the request is invalid  |
+| Method | Path                         | Body                                              | Returns                                   |
+|--------|------------------------------|---------------------------------------------------|-------------------------------------------|
+| GET    | `/api/clients`               |                                                   | The clients, without their emails         |
+| POST   | `/api/session`               | `{ clientId }`                                    | The current client, 404 if unknown        |
+| GET    | `/api/invoices`              |                                                   | All invoices, newest first                |
+| GET    | `/api/invoices?clientId=bob` |                                                   | One client's invoices, 404 if unknown     |
+| POST   | `/api/invoices`              | `{ clientId, description, amountInCents, dueDate }` | The invoice, 400 if the request is invalid |
+
+Amounts travel in cents, as integers. `dueDate` is a calendar date, `YYYY-MM-DD`.
 
 Tests: `cd backend && npm run test:e2e`.
 
 ## Demo shortcuts
 
-- The users are hard-coded in `backend/src/users/users.service.ts`. There is no database.
-- There is no login: the current user comes from the URL, and the backend trusts the ids it receives. A real app
-  takes the user from its own authentication.
+- The clients are hard-coded in `backend/src/clients/clients.service.ts`, and the invoices live in memory: they
+  disappear when the backend restarts.
+- There is no login: the client space comes from the URL, and anyone can read any client's invoices. A real app
+  takes the client from its own authentication.

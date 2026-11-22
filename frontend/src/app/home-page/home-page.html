@@ -1,0 +1,29 @@
+<header class="topbar">
+  <span class="brand">Acme Invoicing</span>
+</header>
+
+<!-- Plain links: each space loads on its own, so nothing of one client ever stays on screen in another's space. -->
+<main class="page narrow">
+  <h1>Where do you want to go?</h1>
+  <p class="muted">Open the billing space in one tab and a client space in another.</p>
+
+  <section class="card">
+    <h2>Billing team</h2>
+    <p class="muted">Create invoices and send them to your clients.</p>
+    <a class="button" href="/billing">Open billing</a>
+  </section>
+
+  <section class="card">
+    <h2>Client spaces</h2>
+    <p class="muted">What each client sees when they log in.</p>
+    <ul class="links">
+      @for (client of clients(); track client.id) {
+        <li>
+          <a [href]="'/clients/' + client.id">
+            {{ client.name }} <span class="muted">· {{ client.company }}</span>
+          </a>
+        </li>
+      }
+    </ul>
+  </section>
+</main>
