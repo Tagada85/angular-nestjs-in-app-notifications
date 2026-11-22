@@ -1,0 +1,55 @@
+<header class="topbar">
+  <span class="brand">Kudos</span>
+  @if (currentUser(); as me) {
+    <span class="me">
+      You are <strong>{{ me.name }}</strong>
+      <!-- A plain link: switching user reloads the page, so nothing of the previous user stays on screen. -->
+      <a href="/">Switch user</a>
+    </span>
+  }
+</header>
+
+<main class="content">
+  @if (currentUser(); as me) {
+    <form class="card" [formGroup]="form" (ngSubmit)="send()">
+      <h1>Send kudos</h1>
+
+      <label for="recipient">To</label>
+      <select id="recipient" formControlName="toUserId">
+        <option value="" disabled>Choose a teammate</option>
+        @for (user of recipients(); track user.id) {
+          <option [value]="user.id">{{ user.name }}</option>
+        }
+      </select>
+
+      <label for="message">Message</label>
+      <textarea
+        id="message"
+        formControlName="message"
+        rows="4"
+        [attr.maxlength]="messageMaxLength"
+        placeholder="Thanks for the review this morning!"
+      ></textarea>
+
+      <button type="submit" [disabled]="form.invalid || sending()">Send kudos</button>
+
+      @if (feedback(); as message) {
+        <p class="feedback" [class.error]="message.kind === 'error'">{{ message.text }}</p>
+      }
+    </form>
+  } @else {
+    <section class="card">
+      <h1>Who are you?</h1>
+      <p>Open each user in their own browser tab, then send kudos from one to the other.</p>
+      <ul class="users">
+        @for (user of users(); track user.id) {
+          <li><a [href]="'/?user=' + user.id">{{ user.name }}</a></li>
+        }
+      </ul>
+
+      @if (feedback(); as message) {
+        <p class="feedback error">{{ message.text }}</p>
+      }
+    </section>
+  }
+</main>
