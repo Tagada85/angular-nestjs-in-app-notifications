@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { Client, ClientSummary, CreateInvoiceRequest, Invoice } from './models';
 
 // The Angular dev server forwards /api to the NestJS backend (proxy.conf.json).
@@ -22,5 +22,9 @@ export class ApiService {
 
   createInvoice(request: CreateInvoiceRequest): Observable<Invoice> {
     return this.http.post<Invoice>('/api/invoices', request);
+  }
+
+  suggestNextInvoiceNumber(): Observable<string> {
+    return this.http.get<{ number: string }>('/api/invoices/next-number').pipe(map(({ number }) => number));
   }
 }

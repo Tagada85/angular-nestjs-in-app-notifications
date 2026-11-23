@@ -37,9 +37,12 @@ The app runs on http://localhost:4200. The Angular dev server forwards `/api` to
 | POST   | `/api/session`               | `{ clientId }`                                    | The current client, 404 if unknown        |
 | GET    | `/api/invoices`              |                                                   | All invoices, newest first                |
 | GET    | `/api/invoices?clientId=bob` |                                                   | One client's invoices, 404 if unknown     |
-| POST   | `/api/invoices`              | `{ clientId, description, amountInCents, dueDate }` | The invoice, 400 if the request is invalid |
+| GET    | `/api/invoices/next-number`  |                                                   | `{ number }`: the number the form proposes |
+| POST   | `/api/invoices`              | `{ number, clientId, description, amountInCents, currency, dueDate }` | The invoice, 400 if the request is invalid, 409 if the number is taken |
 
-Amounts travel in cents, as integers. `dueDate` is a calendar date, `YYYY-MM-DD`.
+The billing form proposes the next number (`INV-2026-0003`, after the highest one of the year), and the billing
+team can change it: 1 to 32 letters, digits, dashes or slashes, unique whatever its case. The currency is `EUR`,
+`USD` or `GBP`. Amounts travel in cents, as integers. `dueDate` is a calendar date, `YYYY-MM-DD`.
 
 Tests: `cd backend && npm run test:e2e`.
 

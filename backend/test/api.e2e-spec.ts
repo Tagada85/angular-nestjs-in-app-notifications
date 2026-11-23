@@ -19,13 +19,24 @@ describe('API (e2e)', () => {
   });
 
   const api = () => request(app.getHttpServer());
+  const year = new Date().getUTCFullYear();
   const validInvoice = {
     clientId: 'alice',
     description: 'Website redesign, phase 1',
     amountInCents: 125000,
+    currency: 'EUR',
     dueDate: '2026-12-31',
   };
-  const createInvoice = (overrides: object = {}) => api().post('/api/invoices').send({ ...validInvoice, ...overrides });
+  // Each invoice gets its own number unless the test sets one: numbers must be unique.
+  // An override set to `undefined` drops the field from the request.
+  let createdCount = 0;
+  const createInvoice = (overrides: object = {}) => {
+    createdCount += 1;
+    return api()
+      .post('/api/invoices')
+      .send({ ...validInvoice, number: `TEST-${createdCount}`, ...overrides });
+  };
+  const suggestedNumber = async () => (await api().get('/api/invoices/next-number').expect(200)).body.number;
 
   it('lists the clients without their emails', () => {
     return api()
@@ -49,24 +60,62 @@ describe('API (e2e)', () => {
     return api().post('/api/session').send({ clientId: 'mallory' }).expect(404);
   });
 
-  it('creates an invoice with a number and the client from the server list', async () => {
-    const response = await createInvoice({ description: '  Website redesign, phase 1  ' }).expect(201);
+  it('creates an invoice with the number and currency it was given, and the client from the server list', async () => {
+    const response = await createInvoice({
+      number: ' INV-2026-0042 ',
+      currency: 'USD',
+      description: '  Website redesign, phase 1  ',
+    }).expect(201);
 
     expect(response.body).toMatchObject({
-      number: `INV-${new Date().getUTCFullYear()}-0001`,
+      number: 'INV-2026-0042',
       client: { id: 'alice', name: 'Alice Martin', company: 'Globex' },
       description: 'Website redesign, phase 1',
       amountInCents: 125000,
-      currency: 'EUR',
+      currency: 'USD',
       dueDate: '2026-12-31',
     });
   });
 
-  it('numbers invoices in sequence', async () => {
-    await createInvoice().expect(201);
-    const second = await createInvoice({ clientId: 'bob' }).expect(201);
+  it('suggests the first number of the year when no invoice exists', async () => {
+    expect(await suggestedNumber()).toBe(`INV-${year}-0001`);
+  });
 
-    expect(second.body.number).toBe(`INV-${new Date().getUTCFullYear()}-0002`);
+  // An invoice created with a lower number after a higher one, a number typed in lowercase,
+  // a previous year's number and a number in another format: only the highest of this year counts.
+  it("suggests the number after this year's highest one", async () => {
+    await createInvoice({ number: `inv-${year}-0007` }).expect(201);
+    await createInvoice({ number: `INV-${year}-0001` }).expect(201);
+    await createInvoice({ number: `INV-${year - 1}-0099` }).expect(201);
+    await createInvoice({ number: 'ACME-0100' }).expect(201);
+
+    expect(await suggestedNumber()).toBe(`INV-${year}-0008`);
+  });
+
+  it('refuses a number already used, whatever its case', async () => {
+    await createInvoice({ number: `INV-${year}-0001` }).expect(201);
+
+    await createInvoice({ number: `inv-${year}-0001` }).expect(409);
+  });
+
+  it('refuses an invoice without a number', () => {
+    return createInvoice({ number: undefined }).expect(400);
+  });
+
+  it('refuses a number with characters other than letters, digits, dashes and slashes', () => {
+    return createInvoice({ number: 'INV 2026 0001' }).expect(400);
+  });
+
+  it('refuses a number longer than 32 characters', () => {
+    return createInvoice({ number: 'A'.repeat(33) }).expect(400);
+  });
+
+  it('refuses a currency other than EUR, USD and GBP', () => {
+    return createInvoice({ currency: 'JPY' }).expect(400);
+  });
+
+  it('refuses an invoice without a currency', () => {
+    return createInvoice({ currency: undefined }).expect(400);
   });
 
   it("shows a client only their own invoices", async () => {
@@ -115,7 +164,7 @@ describe('API (e2e)', () => {
     return createInvoice({ dueDate: '2026-12-31T10:00:00Z' }).expect(400);
   });
 
-  it('refuses fields the API does not know', () => {
-    return createInvoice({ number: 'INV-1999-9999' }).expect(400);
+  it('refuses fields the API does not know, such as an issue date set by the client', () => {
+    return createInvoice({ issuedAt: '1999-01-01T00:00:00.000Z' }).expect(400);
   });
 });

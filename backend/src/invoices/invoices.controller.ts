@@ -13,6 +13,12 @@ export class InvoicesController {
     return this.invoices.create(dto);
   }
 
+  /** The number the billing form proposes. The team can change it before creating the invoice. */
+  @Get('next-number')
+  suggestNextNumber(): { number: string } {
+    return { number: this.invoices.suggestNextNumber() };
+  }
+
   // Demo only: no authentication, so anyone can list any client's invoices.
   @Get()
   findAll(@Query() { clientId }: ListInvoicesQuery): Invoice[] {
