@@ -1,9 +1,30 @@
+/* Theme: every color comes from these tokens. */
+
+:root {
+  /* Native controls (select, date picker, scrollbars) render dark too. */
+  color-scheme: dark;
+
+  --color-background: #09090b;
+  --color-surface: #18181b;
+  --color-text: #f4f4f5;
+  --color-text-muted: #a1a1aa;
+  --color-border: #27272a;
+  --color-border-strong: #3f3f46;
+  --color-row-border: #222225;
+  --color-input-background: #0f0f11;
+  --color-focus: #a1a1aa;
+  --color-button-background: #f4f4f5;
+  --color-button-text: #18181b;
+  --color-success: #4ade80;
+  --color-error: #f87171;
+}
+
 body {
   margin: 0;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   font-size: 15px;
-  color: #18181b;
-  background: #fafafa;
+  color: var(--color-text);
+  background: var(--color-background);
 }
 
 a {
@@ -21,7 +42,7 @@ h2 {
 }
 
 .muted {
-  color: #71717a;
+  color: var(--color-text-muted);
 }
 
 /* Layout */
@@ -32,8 +53,8 @@ h2 {
   justify-content: space-between;
   gap: 16px;
   padding: 12px 24px;
-  background: #fff;
-  border-bottom: 1px solid #e4e4e7;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .brand {
@@ -60,8 +81,8 @@ h2 {
 .card {
   margin-bottom: 24px;
   padding: 24px;
-  background: #fff;
-  border: 1px solid #e4e4e7;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   /* A wide table scrolls inside its card instead of widening the page. */
   overflow-x: auto;
@@ -96,9 +117,23 @@ select {
   padding: 8px 10px;
   font: inherit;
   font-weight: 400;
-  border: 1px solid #d4d4d8;
+  color: var(--color-text);
+  border: 1px solid var(--color-border-strong);
   border-radius: 6px;
-  background: #fff;
+  background: var(--color-input-background);
+}
+
+input::placeholder {
+  color: var(--color-text-muted);
+  opacity: 0.6;
+}
+
+input:focus-visible,
+select:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
 }
 
 .actions {
@@ -115,8 +150,8 @@ button,
   padding: 10px 16px;
   font: inherit;
   font-weight: 500;
-  color: #fff;
-  background: #18181b;
+  color: var(--color-button-text);
+  background: var(--color-button-background);
   border: none;
   border-radius: 6px;
   text-decoration: none;
@@ -124,18 +159,18 @@ button,
 }
 
 button:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
 .feedback {
   margin: 0;
   font-size: 14px;
-  color: #15803d;
+  color: var(--color-success);
 }
 
 .feedback.error {
-  color: #b91c1c;
+  color: var(--color-error);
 }
 
 /* Lists and tables */
@@ -152,9 +187,13 @@ button:disabled {
 .links a {
   display: block;
   padding: 10px 12px;
-  border: 1px solid #e4e4e7;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   text-decoration: none;
+}
+
+.links a:hover {
+  border-color: var(--color-border-strong);
 }
 
 table {
@@ -167,12 +206,12 @@ th,
 td {
   padding: 10px 8px;
   text-align: left;
-  border-bottom: 1px solid #f4f4f5;
+  border-bottom: 1px solid var(--color-row-border);
 }
 
 th {
   font-weight: 500;
-  color: #71717a;
+  color: var(--color-text-muted);
 }
 
 .amount {
