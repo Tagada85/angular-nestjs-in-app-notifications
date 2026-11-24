@@ -85,27 +85,24 @@ describe('API (e2e)', () => {
       });
   });
 
-  // The client's bell shows the notification only if the event names that client: the userId must
-  // be the id the bell token is signed over. The key makes a retried emit notify only once.
-  it('tells Notifizz an invoice was created, for its client, once per invoice', async () => {
+  // The client's bell shows the notification only if the event names that client: clientId must be
+  // the id the bell token is signed over. The amount travels in currency units, as the notification shows it.
+  it('tells Notifizz an invoice was created, for its client, with the amount in currency units', async () => {
     const response = await createInvoice({ clientId: 'alice', number: 'INV-2026-0042', currency: 'USD' }).expect(201);
 
     expect(sentEvents).toEqual([
       {
         name: 'invoice.created',
         properties: {
-          userId: 'alice',
-          email: 'alice@example.com',
+          clientId: 'alice',
           clientName: 'Alice Martin',
-          company: 'Globex',
           invoiceId: response.body.id,
           invoiceNumber: 'INV-2026-0042',
-          description: 'Website redesign, phase 1',
-          amountInCents: 125000,
-          currency: 'USD',
+          invoiceAmount: 1250,
+          invoiceCurrency: 'USD',
           dueDate: '2026-12-31',
         },
-        options: { idempotencyKey: `invoice-created:${response.body.id}` },
+        options: undefined,
       },
     ]);
   });

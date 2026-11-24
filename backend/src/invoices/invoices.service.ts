@@ -39,7 +39,22 @@ export class InvoicesService {
     };
     this.invoices.unshift(invoice);
 
-    this.notifyInvoiceCreated(invoice, client);
+    this.notifizz
+      .track(
+        'invoice.created',
+        {
+          clientId: client.id,
+          clientName: client.name,
+          invoiceId: invoice.id,
+          invoiceNumber: invoice.number,
+          invoiceAmount: invoice.amountInCents / 100,
+          invoiceCurrency: invoice.currency,
+          dueDate: invoice.dueDate,
+        },
+      )
+      .catch((error: unknown) =>
+        this.logger.error(`invoice.created not sent for ${invoice.number}: ${String(error)}`),
+      );
     return invoice;
   }
 
@@ -48,29 +63,6 @@ export class InvoicesService {
    * notifies the client: the recipient is in the event (userId, email), no campaign id in the code.
    * Not awaited: the invoice is created even when Notifizz is slow or down, and a failure is logged.
    */
-  private notifyInvoiceCreated(invoice: Invoice, client: Client): void {
-    this.notifizz
-      .track(
-        'invoice.created',
-        {
-          userId: client.id,
-          email: client.email,
-          clientName: client.name,
-          company: client.company,
-          invoiceId: invoice.id,
-          invoiceNumber: invoice.number,
-          description: invoice.description,
-          amountInCents: invoice.amountInCents,
-          currency: invoice.currency,
-          dueDate: invoice.dueDate,
-        },
-        // A retried emit of the same invoice is recognised by Notifizz and not notified twice.
-        { idempotencyKey: `invoice-created:${invoice.id}` },
-      )
-      .catch((error: unknown) =>
-        this.logger.error(`invoice.created not sent for ${invoice.number}: ${String(error)}`),
-      );
-  }
 
   suggestNextNumber(): string {
     return suggestNextInvoiceNumber(

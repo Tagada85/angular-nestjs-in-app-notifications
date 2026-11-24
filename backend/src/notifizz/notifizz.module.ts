@@ -5,7 +5,6 @@ import { notifizzKeys } from './notifizz-keys.js';
 @Module({
   providers: [
     {
-      // One Notifizz client for the whole app, injected where it is needed.
       provide: NotifizzClient,
       useFactory: () => {
         const { authSecretKey, sdkSecretKey } = notifizzKeys();
