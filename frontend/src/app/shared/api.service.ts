@@ -20,6 +20,10 @@ export class ApiService {
     return this.http.get<Invoice[]>('/api/invoices', { params: clientId ? { clientId } : {} });
   }
 
+  getInvoice(invoiceId: string): Observable<Invoice> {
+    return this.http.get<Invoice>(`/api/invoices/${encodeURIComponent(invoiceId)}`);
+  }
+
   createInvoice(request: CreateInvoiceRequest): Observable<Invoice> {
     return this.http.post<Invoice>('/api/invoices', request);
   }

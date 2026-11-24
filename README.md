@@ -46,6 +46,7 @@ The app runs on http://localhost:4200. The Angular dev server forwards `/api` to
 | GET    | `/api/invoices`              |                                                   | All invoices, newest first                |
 | GET    | `/api/invoices?clientId=bob` |                                                   | One client's invoices, 404 if unknown     |
 | GET    | `/api/invoices/next-number`  |                                                   | `{ number }`: the number the form proposes |
+| GET    | `/api/invoices/:id`          |                                                   | One invoice, 404 if unknown, 400 if the id is not a UUID. Shown by the page `/pay/:invoiceId` |
 | POST   | `/api/invoices`              | `{ number, clientId, description, amountInCents, currency, dueDate }` | The invoice, 400 if the request is invalid, 409 if the number is taken |
 
 Creating an invoice sends the `invoice.created` event to Notifizz, for the invoice's client (`userId`, `email`).

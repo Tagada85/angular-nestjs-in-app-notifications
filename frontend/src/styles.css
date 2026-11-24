@@ -218,3 +218,26 @@ th {
   text-align: right;
   white-space: nowrap;
 }
+
+/* Invoice details */
+
+.total {
+  font-size: 32px;
+  font-weight: 600;
+}
+
+.details {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 12px 24px;
+  margin: 0;
+  font-size: 14px;
+}
+
+.details dt {
+  color: var(--color-text-muted);
+}
+
+.details dd {
+  margin: 0;
+}

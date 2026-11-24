@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
 import { CreateInvoiceDto } from './create-invoice.dto.js';
 import type { Invoice } from './invoice.js';
 import { InvoicesService } from './invoices.service.js';
@@ -23,5 +23,13 @@ export class InvoicesController {
   @Get()
   findAll(@Query() { clientId }: ListInvoicesQuery): Invoice[] {
     return clientId ? this.invoices.findByClient(clientId) : this.invoices.findAll();
+  }
+
+  // Declared after `next-number`: Express matches routes in order, and `:id` would catch it.
+  // Demo only: anyone with the link sees the invoice. Its id is a random UUID, so it cannot be
+  // guessed, but a real app also checks that the logged-in client owns it.
+  @Get(':id')
+  findOne(@Param('id', new ParseUUIDPipe()) id: string): Invoice {
+    return this.invoices.findById(id);
   }
 }

@@ -210,6 +210,24 @@ describe('API (e2e)', () => {
     expect(response.body.map((invoice: { description: string }) => invoice.description)).toEqual(['Second', 'First']);
   });
 
+  // The payment link of a notification opens /pay/<invoiceId>: it must show that invoice, not another one.
+  it('shows one invoice by its id', async () => {
+    const created = await createInvoice({ number: 'INV-2026-0007', clientId: 'bob' }).expect(201);
+    await createInvoice({ number: 'INV-2026-0008' }).expect(201);
+
+    const response = await api().get(`/api/invoices/${created.body.id}`).expect(200);
+
+    expect(response.body).toEqual(created.body);
+  });
+
+  it('answers 404 for an invoice that does not exist', () => {
+    return api().get('/api/invoices/3b241101-e2bb-4255-8caf-4136c566a962').expect(404);
+  });
+
+  it('refuses an invoice id that is not a UUID', () => {
+    return api().get('/api/invoices/not-an-id').expect(400);
+  });
+
   it("refuses to list an unknown client's invoices", () => {
     return api().get('/api/invoices').query({ clientId: 'mallory' }).expect(404);
   });

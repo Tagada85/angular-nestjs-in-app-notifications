@@ -1,0 +1,33 @@
+<header class="topbar">
+  <a class="brand" href="/">Acme Invoicing</a>
+  @if (invoice(); as current) {
+    <span>{{ current.client.name }} <span class="muted">· {{ current.client.company }}</span></span>
+  }
+</header>
+
+<main class="page narrow">
+  @if (invoice(); as current) {
+    <h1>Invoice {{ current.number }}</h1>
+
+    <section class="card">
+      <p class="total">{{ current.amountInCents / 100 | currency: current.currency }}</p>
+
+      <dl class="details">
+        <dt>Billed to</dt>
+        <dd>{{ current.client.name }} <span class="muted">· {{ current.client.company }}</span></dd>
+
+        <dt>Description</dt>
+        <dd>{{ current.description }}</dd>
+
+        <dt>Issued</dt>
+        <dd>{{ current.issuedAt | date: 'mediumDate' }}</dd>
+
+        <dt>Due date</dt>
+        <dd>{{ current.dueDate | date: 'mediumDate' }}</dd>
+      </dl>
+    </section>
+  } @else if (notFound()) {
+    <h1>This invoice does not exist.</h1>
+    <p><a href="/">Back to the home page</a></p>
+  }
+</main>

@@ -84,6 +84,12 @@ export class InvoicesService {
     return [...this.invoices];
   }
 
+  findById(id: string): Invoice {
+    const invoice = this.invoices.find((candidate) => candidate.id === id);
+    if (!invoice) throw new NotFoundException('Unknown invoice');
+    return invoice;
+  }
+
   /** Newest first. */
   findByClient(clientId: string): Invoice[] {
     if (!this.clients.findById(clientId)) throw new NotFoundException('Unknown client');
