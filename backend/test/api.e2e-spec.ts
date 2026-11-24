@@ -74,20 +74,14 @@ describe('API (e2e)', () => {
 
   // The bell opens the inbox of the id its token was signed over: signing another value
   // (the email, another client) would show an empty bell, or someone else's notifications.
-  it("opens a known client's session, with the bell options and a token signed over their id", () => {
+  it("opens a known client's session, with a Notifizz token signed over their id", () => {
     return api()
       .post('/api/session')
       .send({ clientId: 'bob' })
       .expect(200)
       .expect({
         client: { id: 'bob', name: 'Bob Durand', company: 'Initech', email: 'bob@example.com' },
-        bell: {
-          apiKey: 'test-front-key',
-          authType: 'backendToken',
-          userId: 'bob',
-          userEmail: 'bob@example.com',
-          token: 'signed:bob',
-        },
+        notifizzToken: 'signed:bob',
       });
   });
 

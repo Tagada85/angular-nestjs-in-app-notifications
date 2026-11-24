@@ -7,12 +7,8 @@ describe('Notifizz keys', () => {
     process.env = { ...saved };
   });
 
-  it('reads the three keys', () => {
-    expect(notifizzKeys()).toEqual({
-      authSecretKey: 'test-auth-secret',
-      sdkSecretKey: 'test-sdk-secret',
-      frontApiKey: 'test-front-key',
-    });
+  it('reads the two secret keys', () => {
+    expect(notifizzKeys()).toEqual({ authSecretKey: 'test-auth-secret', sdkSecretKey: 'test-sdk-secret' });
   });
 
   // A key left empty in .env must stop the startup, and say which key: otherwise the bell stays empty without a word.
@@ -22,7 +18,7 @@ describe('Notifizz keys', () => {
   });
 
   it('refuses a missing key, and names it', () => {
-    delete process.env.NOTIFIZZ_FRONT_API_KEY;
-    expect(() => notifizzKeys()).toThrow('Missing NOTIFIZZ_FRONT_API_KEY in backend/.env');
+    delete process.env.NOTIFIZZ_SDK_SECRET_KEY;
+    expect(() => notifizzKeys()).toThrow('Missing NOTIFIZZ_SDK_SECRET_KEY in backend/.env');
   });
 });

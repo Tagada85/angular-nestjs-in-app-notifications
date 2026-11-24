@@ -1,12 +1,11 @@
 /**
- * The Notifizz keys, read from backend/.env (see .env.example). All three come from the same
- * Notifizz environment. The two secrets never leave this server; the front key reaches the browser.
+ * The Notifizz secret keys, read from backend/.env (see .env.example). Both come from the same
+ * Notifizz environment and never leave this server.
  */
 export function notifizzKeys() {
   return {
     authSecretKey: required('NOTIFIZZ_AUTH_SECRET_KEY'),
     sdkSecretKey: required('NOTIFIZZ_SDK_SECRET_KEY'),
-    frontApiKey: required('NOTIFIZZ_FRONT_API_KEY'),
   };
 }
 

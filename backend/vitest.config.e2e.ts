@@ -10,7 +10,6 @@ export default defineConfig({
     env: {
       NOTIFIZZ_AUTH_SECRET_KEY: 'test-auth-secret',
       NOTIFIZZ_SDK_SECRET_KEY: 'test-sdk-secret',
-      NOTIFIZZ_FRONT_API_KEY: 'test-front-key',
     },
   },
 });

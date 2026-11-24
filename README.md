@@ -13,17 +13,20 @@ cp .env.example .env
 npm run start:dev
 ```
 
-Fill `backend/.env` with the keys of one non-production Notifizz environment (dashboard: the SDK setup page).
-The backend refuses to start while a key is missing. The two secrets stay on the server; the front key reaches the
-browser through `POST /api/session`.
+Fill `backend/.env` with the two secret keys of one non-production Notifizz environment (dashboard: the SDK setup
+page). The backend refuses to start while a key is missing. They never leave the server.
 
 The API listens on http://localhost:3000/api.
 
 ```bash
 cd frontend
 npm install
+cp src/environments/environment.development.example.ts src/environments/environment.development.ts
 npm start
 ```
+
+Paste the front API key of the same Notifizz environment in `environment.development.ts` (not committed). It is
+public: the browser sends it with every request of the Notifizz bell.
 
 The app runs on http://localhost:4200. The Angular dev server forwards `/api` to the backend
 (`frontend/proxy.conf.json`), so the backend needs no CORS setup.
@@ -39,7 +42,7 @@ The app runs on http://localhost:4200. The Angular dev server forwards `/api` to
 | Method | Path                         | Body                                              | Returns                                   |
 |--------|------------------------------|---------------------------------------------------|-------------------------------------------|
 | GET    | `/api/clients`               |                                                   | The clients, without their emails         |
-| POST   | `/api/session`               | `{ clientId }`                                    | `{ client, bell }`, 404 if unknown. `bell` holds the Notifizz bell options; its token is signed over the client id |
+| POST   | `/api/session`               | `{ clientId }`                                    | `{ client, notifizzToken }`, 404 if unknown. The token, signed over the client id, opens that client's Notifizz bell |
 | GET    | `/api/invoices`              |                                                   | All invoices, newest first                |
 | GET    | `/api/invoices?clientId=bob` |                                                   | One client's invoices, 404 if unknown     |
 | GET    | `/api/invoices/next-number`  |                                                   | `{ number }`: the number the form proposes |

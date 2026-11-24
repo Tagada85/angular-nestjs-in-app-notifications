@@ -7,18 +7,10 @@ export interface Client {
 
 export type ClientSummary = Pick<Client, 'id' | 'name' | 'company'>;
 
-/** The Notifizz bell options, prepared by the backend: the token is signed over the client id. */
-export interface BellOptions {
-  apiKey: string;
-  authType: 'backendToken';
-  userId: string;
-  userEmail: string;
-  token: string;
-}
-
 export interface Session {
   client: Client;
-  bell: BellOptions;
+  /** For the Notifizz bell: signed by the backend over the client id. */
+  notifizzToken: string;
 }
 
 export const INVOICE_CURRENCIES = ['EUR', 'USD', 'GBP'] as const;

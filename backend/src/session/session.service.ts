@@ -2,20 +2,11 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { NotifizzClient } from '@notifizz/nodejs';
 import type { Client } from '../clients/client.js';
 import { ClientsService } from '../clients/clients.service.js';
-import { notifizzKeys } from '../notifizz/notifizz-keys.js';
-
-/** The options of the Notifizz bell, ready to pass to <notifizz-bell [options]>. */
-export interface BellOptions {
-  apiKey: string;
-  authType: 'backendToken';
-  userId: string;
-  userEmail: string;
-  token: string;
-}
 
 export interface Session {
   client: Client;
-  bell: BellOptions;
+  /** For the Notifizz bell (backendToken authentication): signed over the client id. */
+  notifizzToken: string;
 }
 
 @Injectable()
@@ -31,16 +22,6 @@ export class SessionService {
     const client = this.clients.findById(clientId);
     if (!client) throw new NotFoundException('Unknown client');
 
-    return {
-      client,
-      bell: {
-        apiKey: notifizzKeys().frontApiKey,
-        authType: 'backendToken',
-        userId: client.id,
-        userEmail: client.email,
-        // Signed over the client id: the bell only opens the inbox of this client.
-        token: this.notifizz.generateHashedToken(client.id),
-      },
-    };
+    return { client, notifizzToken: this.notifizz.generateHashedToken(client.id) };
   }
 }
