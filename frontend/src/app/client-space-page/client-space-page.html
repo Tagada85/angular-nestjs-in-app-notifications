@@ -3,6 +3,10 @@
   @if (client(); as me) {
     <span class="account">
       <span>{{ me.name }} <span class="muted">· {{ me.company }}</span></span>
+      <!-- The bell reads its options once, when it mounts: it only mounts once the session gave the token. -->
+      @if (bellOptions(); as options) {
+        <notifizz-bell [options]="options"></notifizz-bell>
+      }
     </span>
   }
 </header>

@@ -9,8 +9,13 @@ Requires Node 22 or 24.
 ```bash
 cd backend
 npm install
+cp .env.example .env
 npm run start:dev
 ```
+
+Fill `backend/.env` with the keys of one non-production Notifizz environment (dashboard: the SDK setup page).
+The backend refuses to start while a key is missing. The two secrets stay on the server; the front key reaches the
+browser through `POST /api/session`.
 
 The API listens on http://localhost:3000/api.
 
@@ -34,11 +39,14 @@ The app runs on http://localhost:4200. The Angular dev server forwards `/api` to
 | Method | Path                         | Body                                              | Returns                                   |
 |--------|------------------------------|---------------------------------------------------|-------------------------------------------|
 | GET    | `/api/clients`               |                                                   | The clients, without their emails         |
-| POST   | `/api/session`               | `{ clientId }`                                    | The current client, 404 if unknown        |
+| POST   | `/api/session`               | `{ clientId }`                                    | `{ client, bell }`, 404 if unknown. `bell` holds the Notifizz bell options; its token is signed over the client id |
 | GET    | `/api/invoices`              |                                                   | All invoices, newest first                |
 | GET    | `/api/invoices?clientId=bob` |                                                   | One client's invoices, 404 if unknown     |
 | GET    | `/api/invoices/next-number`  |                                                   | `{ number }`: the number the form proposes |
 | POST   | `/api/invoices`              | `{ number, clientId, description, amountInCents, currency, dueDate }` | The invoice, 400 if the request is invalid, 409 if the number is taken |
+
+Creating an invoice sends the `invoice.created` event to Notifizz, for the invoice's client (`userId`, `email`).
+The invoice is created even when Notifizz cannot be reached; the failure is logged.
 
 The billing form proposes the next number (`INV-2026-0003`, after the highest one of the year), and the billing
 team can change it: 1 to 32 letters, digits, dashes or slashes, unique whatever its case. The currency is `EUR`,

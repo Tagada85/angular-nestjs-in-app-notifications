@@ -1,14 +1,38 @@
 import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
+import { NotifizzClient } from '@notifizz/nodejs';
 import request from 'supertest';
 import { App } from 'supertest/types.js';
 import { AppModule } from './../src/app.module.js';
+
+interface SentEvent {
+  name: string;
+  properties: Record<string, unknown>;
+  options: { idempotencyKey?: string };
+}
+
+// Stands in for the Notifizz SDK: no network call. The token shows which value was signed,
+// and the events the app sends are recorded. `notifizzIsDown` makes every track() fail.
+let sentEvents: SentEvent[] = [];
+let notifizzIsDown = false;
+const fakeNotifizz = {
+  generateHashedToken: (userId: string) => `signed:${userId}`,
+  track: async (name: string, properties: Record<string, unknown>, options: { idempotencyKey?: string }) => {
+    if (notifizzIsDown) throw new Error('Notifizz unreachable');
+    sentEvents.push({ name, properties, options });
+  },
+};
 
 describe('API (e2e)', () => {
   let app: INestApplication<App>;
 
   beforeEach(async () => {
-    const moduleFixture = await Test.createTestingModule({ imports: [AppModule] }).compile();
+    sentEvents = [];
+    notifizzIsDown = false;
+    const moduleFixture = await Test.createTestingModule({ imports: [AppModule] })
+      .overrideProvider(NotifizzClient)
+      .useValue(fakeNotifizz)
+      .compile();
     app = moduleFixture.createNestApplication();
     app.setGlobalPrefix('api');
     await app.init();
@@ -48,12 +72,68 @@ describe('API (e2e)', () => {
       ]);
   });
 
-  it("opens a known client's session", () => {
+  // The bell opens the inbox of the id its token was signed over: signing another value
+  // (the email, another client) would show an empty bell, or someone else's notifications.
+  it("opens a known client's session, with the bell options and a token signed over their id", () => {
     return api()
       .post('/api/session')
       .send({ clientId: 'bob' })
       .expect(200)
-      .expect({ id: 'bob', name: 'Bob Durand', company: 'Initech', email: 'bob@example.com' });
+      .expect({
+        client: { id: 'bob', name: 'Bob Durand', company: 'Initech', email: 'bob@example.com' },
+        bell: {
+          apiKey: 'test-front-key',
+          authType: 'backendToken',
+          userId: 'bob',
+          userEmail: 'bob@example.com',
+          token: 'signed:bob',
+        },
+      });
+  });
+
+  // The client's bell shows the notification only if the event names that client: the userId must
+  // be the id the bell token is signed over. The key makes a retried emit notify only once.
+  it('tells Notifizz an invoice was created, for its client, once per invoice', async () => {
+    const response = await createInvoice({ clientId: 'alice', number: 'INV-2026-0042', currency: 'USD' }).expect(201);
+
+    expect(sentEvents).toEqual([
+      {
+        name: 'invoice.created',
+        properties: {
+          userId: 'alice',
+          email: 'alice@example.com',
+          clientName: 'Alice Martin',
+          company: 'Globex',
+          invoiceId: response.body.id,
+          invoiceNumber: 'INV-2026-0042',
+          description: 'Website redesign, phase 1',
+          amountInCents: 125000,
+          currency: 'USD',
+          dueDate: '2026-12-31',
+        },
+        options: { idempotencyKey: `invoice-created:${response.body.id}` },
+      },
+    ]);
+  });
+
+  // Billing must not depend on Notifizz: an outage there cannot cost an invoice.
+  it('still creates the invoice when Notifizz is down', async () => {
+    notifizzIsDown = true;
+
+    await createInvoice({ number: 'INV-2026-0050' }).expect(201);
+
+    const response = await api().get('/api/invoices').expect(200);
+    expect(response.body.map((invoice: { number: string }) => invoice.number)).toEqual(['INV-2026-0050']);
+  });
+
+  it('tells Notifizz nothing about a refused invoice', async () => {
+    await createInvoice({ number: 'INV-2026-0001' }).expect(201);
+    sentEvents = [];
+
+    await createInvoice({ number: 'INV-2026-0001' }).expect(409);
+    await createInvoice({ clientId: 'mallory' }).expect(400);
+
+    expect(sentEvents).toEqual([]);
   });
 
   it('refuses a session for an unknown client', () => {

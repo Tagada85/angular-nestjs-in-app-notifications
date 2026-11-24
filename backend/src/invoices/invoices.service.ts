@@ -1,6 +1,7 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { NotifizzClient } from '@notifizz/nodejs';
 import { randomUUID } from 'node:crypto';
-import { toSummary } from '../clients/client.js';
+import { type Client, toSummary } from '../clients/client.js';
 import { ClientsService } from '../clients/clients.service.js';
 import type { CreateInvoiceDto } from './create-invoice.dto.js';
 import type { Invoice } from './invoice.js';
@@ -8,10 +9,14 @@ import { isSameInvoiceNumber, suggestNextInvoiceNumber } from './invoice-number.
 
 @Injectable()
 export class InvoicesService {
+  private readonly logger = new Logger(InvoicesService.name);
   // Kept in memory: the invoices disappear when the server restarts.
   private readonly invoices: Invoice[] = [];
 
-  constructor(private readonly clients: ClientsService) {}
+  constructor(
+    private readonly clients: ClientsService,
+    private readonly notifizz: NotifizzClient,
+  ) {}
 
   create({ number, clientId, description, amountInCents, currency, dueDate }: CreateInvoiceDto): Invoice {
     const client = this.clients.findById(clientId);
@@ -33,7 +38,38 @@ export class InvoicesService {
       issuedAt: new Date().toISOString(),
     };
     this.invoices.unshift(invoice);
+
+    this.notifyInvoiceCreated(invoice, client);
     return invoice;
+  }
+
+  /**
+   * Tells Notifizz an invoice was created. Notifizz finds the campaigns listening to this event and
+   * notifies the client: the recipient is in the event (userId, email), no campaign id in the code.
+   * Not awaited: the invoice is created even when Notifizz is slow or down, and a failure is logged.
+   */
+  private notifyInvoiceCreated(invoice: Invoice, client: Client): void {
+    this.notifizz
+      .track(
+        'invoice.created',
+        {
+          userId: client.id,
+          email: client.email,
+          clientName: client.name,
+          company: client.company,
+          invoiceId: invoice.id,
+          invoiceNumber: invoice.number,
+          description: invoice.description,
+          amountInCents: invoice.amountInCents,
+          currency: invoice.currency,
+          dueDate: invoice.dueDate,
+        },
+        // A retried emit of the same invoice is recognised by Notifizz and not notified twice.
+        { idempotencyKey: `invoice-created:${invoice.id}` },
+      )
+      .catch((error: unknown) =>
+        this.logger.error(`invoice.created not sent for ${invoice.number}: ${String(error)}`),
+      );
   }
 
   suggestNextNumber(): string {

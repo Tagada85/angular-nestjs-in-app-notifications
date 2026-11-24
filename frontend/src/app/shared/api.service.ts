@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
-import { Client, ClientSummary, CreateInvoiceRequest, Invoice } from './models';
+import { ClientSummary, CreateInvoiceRequest, Invoice, Session } from './models';
 
 // The Angular dev server forwards /api to the NestJS backend (proxy.conf.json).
 @Injectable({ providedIn: 'root' })
@@ -12,8 +12,8 @@ export class ApiService {
     return this.http.get<ClientSummary[]>('/api/clients');
   }
 
-  openSession(clientId: string): Observable<Client> {
-    return this.http.post<Client>('/api/session', { clientId });
+  openSession(clientId: string): Observable<Session> {
+    return this.http.post<Session>('/api/session', { clientId });
   }
 
   listInvoices(clientId?: string): Observable<Invoice[]> {
