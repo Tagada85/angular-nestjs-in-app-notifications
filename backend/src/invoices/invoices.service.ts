@@ -1,7 +1,7 @@
 import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { NotifizzClient } from '@notifizz/nodejs';
 import { randomUUID } from 'node:crypto';
-import { type Client, toSummary } from '../clients/client.js';
+import { toSummary } from '../clients/client.js';
 import { ClientsService } from '../clients/clients.service.js';
 import type { CreateInvoiceDto } from './create-invoice.dto.js';
 import type { Invoice } from './invoice.js';
@@ -39,6 +39,9 @@ export class InvoicesService {
     };
     this.invoices.unshift(invoice);
 
+    // Tells Notifizz an invoice was created: the campaigns listening to this event notify the client
+    // (clientId), no campaign id in the code. Not awaited: the invoice is created even when Notifizz
+    // is slow or down, and a failure is logged.
     this.notifizz
       .track(
         'invoice.created',
@@ -57,12 +60,6 @@ export class InvoicesService {
       );
     return invoice;
   }
-
-  /**
-   * Tells Notifizz an invoice was created. Notifizz finds the campaigns listening to this event and
-   * notifies the client: the recipient is in the event (userId, email), no campaign id in the code.
-   * Not awaited: the invoice is created even when Notifizz is slow or down, and a failure is logged.
-   */
 
   suggestNextNumber(): string {
     return suggestNextInvoiceNumber(
